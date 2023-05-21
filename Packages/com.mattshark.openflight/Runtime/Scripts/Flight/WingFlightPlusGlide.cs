@@ -1,4 +1,4 @@
-﻿using UdonSharp;
+using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
 using VRC.SDKBase;
@@ -120,6 +120,7 @@ public class WingFlightPlusGlideEditor : Editor
 		private Quaternion playerRot;
 		private float handsOutAmount = 0.01f; // How far apart are your hands from your central body? 0-1
 		private bool handsOut = false; // Are the controllers held outside of an imaginary cylinder?
+		private bool handsOpposite = false;
 		private bool isFlapping = false; // Doing the arm motion
 		private bool isFlying = false; // Currently in the air after/during a flap
 		private bool isGliding = false; // Has arms out while flying
@@ -301,24 +302,30 @@ public class WingFlightPlusGlideEditor : Editor
 			{
 				fallingTick = 0;
 			}
-			// Check if hands are held out
-			tmpFloat = Vector2.Distance(
-					new Vector2(localPlayer.GetBonePosition(rightUpperArmBone).x, localPlayer.GetBonePosition(rightUpperArmBone).z),
-					new Vector2(localPlayer.GetBonePosition(rightHandBone).x, localPlayer.GetBonePosition(rightHandBone).z)
-				);
-			tmpFloatB = Vector2.Distance(
-					new Vector2(localPlayer.GetBonePosition(leftUpperArmBone).x, localPlayer.GetBonePosition(leftUpperArmBone).z),
-					new Vector2(localPlayer.GetBonePosition(leftHandBone).x, localPlayer.GetBonePosition(leftHandBone).z)
-				);
-			// handsOutAmount chooses the closest hand to the body
-			handsOutAmount = (tmpFloat < tmpFloatB ? tmpFloat : tmpFloatB) / (armspan / 2);
-			if (handsOutAmount > 0.6f)
+			// Check if hands are held out (ie are a certain distance from the central body)
+			if (
+				Vector2.Distance(
+					new Vector2(LocalPlayer.GetBonePosition(rightUpperArmBone).x, LocalPlayer.GetBonePosition(rightUpperArmBone).z),
+					new Vector2(LocalPlayer.GetBonePosition(rightHandBone).x, LocalPlayer.GetBonePosition(rightHandBone).z)
+				)
+					> armspan / 3.3f
+				&& Vector2.Distance(
+					new Vector2(LocalPlayer.GetBonePosition(leftUpperArmBone).x, LocalPlayer.GetBonePosition(leftUpperArmBone).z),
+					new Vector2(LocalPlayer.GetBonePosition(leftHandBone).x, LocalPlayer.GetBonePosition(leftHandBone).z)
+				)
+					> armspan / 3.3f
+			)
 			{
 				handsOut = true;
 			}
 			else
 			{
 				handsOut = false;
+			}
+
+			if (Vector3.Angle(LHRot * Vector3.left, RHRot * Vector3.right) <= 90)
+			{
+				handsOpposite = true;
 			}
 
 			if (!isFlapping)
@@ -372,7 +379,7 @@ public class WingFlightPlusGlideEditor : Editor
 			}
 
 			// See fallToGlide tooltip
-			if (fallToGlide && fallingTick >= 20 && handsOut && canGlide)
+			if (fallToGlide && fallingTick >= 20 && handsOut && handsOpposite && canGlide)
 			{
 				TakeOff();
 			}
@@ -381,7 +388,7 @@ public class WingFlightPlusGlideEditor : Editor
 			// (Flying starts when a player first flaps and ends when they become grounded)
 			if (isFlying)
 			{
-				if ((!isFlapping) && localPlayer.IsPlayerGrounded())
+				if (IsMainMenuOpen() || ((!isFlapping) && LocalPlayer.IsPlayerGrounded()))
 				{
 					Land();
 				}
@@ -392,19 +399,15 @@ public class WingFlightPlusGlideEditor : Editor
 					{
 						localPlayer.SetGravityStrength(flightGravity());
 					}
-					LHRot = localPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.LeftHand).rotation;
-					RHRot = localPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.RightHand).rotation;
-					// Calculate the plane normal of each wing. IE if the player is T-Posing, both wing plane normals will point upwards
-					wingPlaneNormalR = Vector3.Normalize(RHRot * Vector3.up);
-					wingPlaneNormalL = Vector3.Normalize(LHRot * Vector3.down); // Why is it down? I don't know, it's just how it turned up in testing
-					if ((!isFlapping) && handsOut && canGlide)
+					LHRot = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.LeftHand).rotation;
+					RHRot = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.RightHand).rotation;
+					if ((!isFlapping) && (isGliding ? true : handsOut) && handsOpposite && canGlide)
 					{
 						// Gliding, banking, and steering logic
 						isGliding = true;
-						newVelocity = setFinalVelocity ? finalVelocity : localPlayer.GetVelocity();
-						wingDirection = Vector3.Normalize(Vector3.Slerp(RHRot * Vector3.forward, LHRot * Vector3.forward, 0.5f)); // The direction the player should go based on how they have angled their wings
-
-						// Hotfix: Always have some form of horizontal velocity while falling, except when windy. In rare cases (more common with extremely small avatars) a player's velocity is perfectly straight up/down, which breaks gliding
+						newVelocity = setFinalVelocity ? finalVelocity : LocalPlayer.GetVelocity();
+						wingDirection = Vector3.Normalize(Vector3.Slerp(RHRot * Vector3.forward, LHRot * Vector3.forward, 0.5f)); // The direction the player should go based on how they've angled their wings
+						// Hotfix: Always have some form of horizontal velocity while falling. In rare cases (more common with extremely small avatars) a player's velocity is perfectly straight up/down, which breaks gliding
 						if (newVelocity.y < 0.3f && newVelocity.x == 0 && newVelocity.z == 0)
 						{
 							Vector2 tmpV2 = new Vector2(wingDirection.x, wingDirection.z).normalized * 0.145f;
@@ -413,13 +416,13 @@ public class WingFlightPlusGlideEditor : Editor
 
 						// Steering logic
 						steering = (RHPos.y - LHPos.y) * 80 / armspan;
-						if (steering > 35)
+						if (steering > 45)
 						{
-							steering = 35;
+							steering = 45;
 						}
-						else if (steering < -35)
+						else if (steering < -45)
 						{
-							steering = -35;
+							steering = -45;
 						}
 						
 						if (bankingTurns)
@@ -508,9 +511,9 @@ public class WingFlightPlusGlideEditor : Editor
 							+ string.Concat("\nIsGliding: ", isGliding.ToString())
 							+ string.Concat("\nHandsOut: ", handsOut.ToString())
 							+ string.Concat("\nDownThrust: ", downThrust.ToString())
-							+ string.Concat("\nGrounded: ", localPlayer.IsPlayerGrounded().ToString())
+							+ string.Concat("\nGrounded: ", LocalPlayer.IsPlayerGrounded().ToString())
 							+ string.Concat("\nCannotFly: ", (cannotFlyTick > 0).ToString())
-							+ string.Concat("\nThing: ", GetWingArea(windVector.normalized).ToString());
+							+ string.Concat("\nLeAngle: ", Vector3.Angle(LHRot * Vector3.left, RHRot * Vector3.right).ToString());
 					}
 				}
 			}
@@ -562,6 +565,14 @@ public class WingFlightPlusGlideEditor : Editor
 					ImmobilizePart(true);
 				}
 			}
+		}
+
+		// Utility method to detect main menu status
+		// Technique pulled from https://github.com/Superbstingray/UdonPlayerPlatformHook
+		private bool IsMainMenuOpen()
+		{
+			int uiColliderCount = Physics.OverlapSphere(LocalPlayer.GetPosition(), 10f, 524288).Length;
+			return (uiColliderCount == 8 || uiColliderCount == 9 || uiColliderCount == 10);
 		}
 
 		// Effectually disables all flight-related variables

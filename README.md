@@ -10,8 +10,9 @@ Note that this is a World/Udon project. This system cannot be installed to an av
 ![](https://byob.yarr.is/Mattshark89/OpenFlight-VRC/current_release_downloads)
 
 ### WIP New docs!
-These are not complete, so use this readme as a reference for now.
+We are transitioning to these new docs:
 https://mattshark89.github.io/OpenFlight-VRC/docs/#/
+This readme will retain its current format for now incase any information is missing from the new docs.
 
 ## How does it work?
 
@@ -24,13 +25,10 @@ The list of avatars that are permitted to fly is fetched from a GitHub-hosted js
 
 First step: make sure your VRChat world SDK is up to date and you are using the VRChat Creator Companion. The avatar detection system uses remote string loading, a feature that is very new to Udon and not available in older SDKs (which means you MUST use the VCC to install UdonSharp)
 
-You first need to add Koyashiro's repo to your VCC for dependencys
-[Koyashiro's VPM Repos](https://vpm.koyashiro.net/install)
-
-Then, click this link and add the OpenFlight repo to your VCC using the Add to VCC button
+Click this link to open the VCC and automatically add the repository
 [OpenFlight](https://mattshark89.github.io/OpenFlight-VRC/?install=true)
 
-If clicking on either of those links seems to have done nothing on your VRChat Creator Companion window, you need to update it.
+If clicking on the link seems to have done nothing on your VRChat Creator Companion window, you need to update it.
 
 You can try out the latest stable version of OpenFlight here: [Stable World](https://vrchat.com/home/launch?worldId=wrld_e61cba97-a1a9-4c53-93d2-7bb77240a2e7)<br>
 Alternate development world by Happyrobot33: [Bleeding Edge Hash World](https://vrchat.com/home/launch?worldId=wrld_ef75dcc8-02fa-43ef-8f42-7b8159783d3d)<br>
@@ -48,7 +46,7 @@ Alternate development world by Happyrobot33: [Bleeding Edge Hash World](https://
 
 ## How to use
 
-After installing the VCC packages listed above, add them to your project by clicking "Manage Project" in the VCC and selecting OpenFlight. Once you are in your project, look for the dropdown labeled VRC Packages along the bar that has File and Edit, and inside it go to OpenFlight > Prefabs. Clicking on one of the listed prefabs will automatically add it to your currently open scene (The main/full prefab includes the recommended tablet that includes additional settings. If all you want is a toggle button, use the Lite prefab instead. You only need to select one prefab.) As long as you dont unlink the prefab that it adds, there is no need to do this again if you update the package, as that prefab will update with it.
+After installing the VCC package listed above, add them to your project by clicking "Manage Project" in the VCC and selecting OpenFlight. Once you are in your project, look for the dropdown labeled VRC Packages along the bar that has File and Edit, and inside it go to OpenFlight > Prefabs. Clicking on one of the listed prefabs will automatically add it to your currently open scene (The main/full prefab includes the recommended tablet that includes additional settings. If all you want is a toggle button, use the Lite prefab instead. You only need to select one prefab.) As long as you dont unlink the prefab that it adds, there is no need to do this again if you update the package, as that prefab will update with it.
 
 To fine-tune the flight settings, select the WingedFlight GameObject inside of the prefab and check the Inspector. Check the README.md file within the Package for more details.
 
@@ -95,3 +93,7 @@ In no particular order:
 - Github contributors: https://github.com/Mattshark89/OpenFlight-VRC/graphs/contributors
 
 ...and several others for giving suggestions and helping fix critical bugs. You all are great!
+
+<a href="https://github.com/Mattshark89/OpenFlight-VRC/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Mattshark89/OpenFlight-VRC" />
+</a>

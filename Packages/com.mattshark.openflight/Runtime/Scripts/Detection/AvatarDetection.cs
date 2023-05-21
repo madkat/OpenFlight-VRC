@@ -6,7 +6,8 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
-using Koyashiro.UdonJson;
+using VRC.SDK3;
+using VRC.SDK3.Data;
 
 namespace OpenFlightVRC
 {
@@ -43,7 +44,7 @@ namespace OpenFlightVRC
 
 		[System.NonSerialized]
 		string jsonString = ""; //this is the JSON list in string form
-		UdonJsonValue json; //this is the JSON list in a serialized form, allowing for JSON commands to be used on it
+		DataDictionary json; //this is the JSON list in a serialized form, allowing for JSON commands to be used on it
 		public bool allowedToFly = false; //this is used to tell openflight if the avatar is allowed to fly
 		public bool skipLoadingAvatar = true; //this is used to skip the loading avatar, as it is not a real avatar
 
@@ -170,27 +171,27 @@ namespace OpenFlightVRC
 
 		bool isAvatarAllowedToFly(string in_hashV1, string in_hashV2)
 		{
-			var avi_bases = json.GetValue("Bases"); //array of all the bases
-			for (int i = 0; i < avi_bases.Count(); i++)
+			DataDictionary bases = json["Bases"].DataDictionary;
+			DataToken[] baseKeys = bases.GetKeys().ToArray();
+			for (int i = 0; i < bases.Count; i++)
 			{
-				var avi_base_keys = avi_bases.Keys();
-				var avi_base = avi_bases.GetValue(avi_base_keys[i]);
-				for (int j = 0; j < avi_base.Count(); j++)
+				DataDictionary avi_base = bases[baseKeys[i]].DataDictionary;
+				DataToken[] avi_base_keys = avi_base.GetKeys().ToArray();
+				for (int j = 0; j < avi_base.Count; j++)
 				{
-					var avi_varaint_keys = avi_base.Keys();
-					var variant = avi_base.GetValue(avi_varaint_keys[j]);
-					//Debug.Log(variant.GetValue("Hash").AsString());
-					var hashArray = variant.GetValue("Hash");
-					for (int k = 0; k < hashArray.Count(); k++)
+					DataDictionary variant = avi_base[avi_base_keys[j]].DataDictionary;
+					DataToken[] avi_variant_keys = variant.GetKeys().ToArray();
+					DataToken[] hashArray = variant["Hash"].DataList.ToArray();
+					for (int k = 0; k < hashArray.Length; k++)
 					{
-						string hash = hashArray.GetValue(k).AsString();
+						string hash = hashArray[k].String;
 						if (hash == in_hashV1.ToString() || hash == in_hashV2.ToString())
 						{
-							name = variant.GetValue("Name").AsString();
-							creator = variant.GetValue("Creator").AsString();
-							introducer = variant.GetValue("Introducer").AsString();
-							weight = (float)variant.GetValue("Weight").AsNumber();
-							WingtipOffset = (float)variant.GetValue("WingtipOffset").AsNumber();
+							name = variant["Name"].String;
+							creator = variant["Creator"].String;
+							introducer = variant["Introducer"].String;
+							weight = (float)variant["Weight"].Number;
+							WingtipOffset = (float)variant["WingtipOffset"].Number;
 							return true;
 						}
 					}
@@ -209,12 +210,24 @@ namespace OpenFlightVRC
 		{
 			if (jsonString != "" && jsonString != null)
 			{
-				var result = UdonJsonDeserializer.TryDeserialize(jsonString, out json);
-				jsonVersion = json.GetValue("JSON Version").AsString();
-				jsonDate = json.GetValue("JSON Date").AsString();
+				//purely temp variable due to needing to use out
+				DataToken jsonDataToken;
+				bool success = VRCJson.TryDeserializeFromJson(jsonString, out jsonDataToken);
+				if (!success)
+				{
+					debugInfo = "Failed to load JSON list!";
+					Debug.LogError("Failed to load JSON list! This shouldnt occur unless we messed up the JSON, or VRChat broke something!");
+					return;
+				}
+				json = jsonDataToken.DataDictionary;
+				jsonVersion = json["JSON Version"].String;
+				jsonDate = json["JSON Date"].String;
 			}
 		}
 
+		/// <summary>
+		/// 	Tells the script to reload the JSON file and then recheck your worn avatar for flight
+		/// </summary>
 		public void reloadJSON()
 		{
 			debugInfo = "Loading JSON list...";
@@ -282,6 +295,9 @@ namespace OpenFlightVRC
 		}
 
 		//this can be used for other scripts to check if the avatar is allowed to fly again
+		/// <summary>
+		/// 	Reevaluates whether or not you should be able to fly
+		/// </summary>
 		public void ReevaluateFlight()
 		{
 			d_spinetochest = 0;
