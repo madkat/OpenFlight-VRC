@@ -19,20 +19,26 @@ namespace OpenFlightVRC.Extensions
 			init();
 		}
 
-		public void OnPlayerTriggerEnter()
+		public void OnPlayerTriggerEnter(VRCPlayerApi player)
 		{
-			wingFlightPlusGlide.SetProgramVariable("windVector", Vector3.Normalize(transform.TransformDirection(getDirectionVector())) * windSpeed);
-			wingFlightPlusGlide.SetProgramVariable("windy", true);
-			Debug.Log("Entered Wind Zone");
+			if (player.IsValid() && player.isLocal)
+			{
+				wingFlightPlusGlide.SetProgramVariable("windVector", Vector3.Normalize(transform.TransformDirection(getDirectionVector())) * windSpeed);
+				wingFlightPlusGlide.SetProgramVariable("windy", true);
+				Debug.Log("Entered Wind Zone");
+			}
 		}
 
-		public void OnPlayerTriggerExit()
+		public void OnPlayerTriggerExit(VRCPlayerApi player)
 		{
-			wingFlightPlusGlide.SetProgramVariable("windy", false);
+			if (player.IsValid() && player.isLocal)
+			{
+				wingFlightPlusGlide.SetProgramVariable("windy", false);
+			}
 		}
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
-    protected override Color GetGizmoColor()
+		protected override Color GetGizmoColor()
     {
         return Color.cyan;
     }
