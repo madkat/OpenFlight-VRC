@@ -302,19 +302,20 @@ public class WingFlightPlusGlideEditor : Editor
 			{
 				fallingTick = 0;
 			}
+
+
 			// Check if hands are held out (ie are a certain distance from the central body)
-			if (
-				Vector2.Distance(
-					new Vector2(LocalPlayer.GetBonePosition(rightUpperArmBone).x, LocalPlayer.GetBonePosition(rightUpperArmBone).z),
-					new Vector2(LocalPlayer.GetBonePosition(rightHandBone).x, LocalPlayer.GetBonePosition(rightHandBone).z)
-				)
-					> armspan / 3.3f
-				&& Vector2.Distance(
-					new Vector2(LocalPlayer.GetBonePosition(leftUpperArmBone).x, LocalPlayer.GetBonePosition(leftUpperArmBone).z),
-					new Vector2(LocalPlayer.GetBonePosition(leftHandBone).x, LocalPlayer.GetBonePosition(leftHandBone).z)
-				)
-					> armspan / 3.3f
-			)
+			tmpFloat = Vector2.Distance(
+					new Vector2(localPlayer.GetBonePosition(rightUpperArmBone).x, localPlayer.GetBonePosition(rightUpperArmBone).z),
+					new Vector2(localPlayer.GetBonePosition(rightHandBone).x, localPlayer.GetBonePosition(rightHandBone).z)
+				);
+			tmpFloatB = Vector2.Distance(
+					new Vector2(localPlayer.GetBonePosition(leftUpperArmBone).x, localPlayer.GetBonePosition(leftUpperArmBone).z),
+					new Vector2(localPlayer.GetBonePosition(leftHandBone).x, localPlayer.GetBonePosition(leftHandBone).z)
+				);
+			// handsOutAmount chooses the closest hand to the body
+			handsOutAmount = (tmpFloat < tmpFloatB ? tmpFloat : tmpFloatB) / (armspan / 2);
+			if ((tmpFloat > armspan / 3.3f) && (tmpFloatB > armspan / 3.3f))
 			{
 				handsOut = true;
 			}
@@ -388,7 +389,7 @@ public class WingFlightPlusGlideEditor : Editor
 			// (Flying starts when a player first flaps and ends when they become grounded)
 			if (isFlying)
 			{
-				if (IsMainMenuOpen() || ((!isFlapping) && LocalPlayer.IsPlayerGrounded()))
+				if (IsMainMenuOpen() || ((!isFlapping) && localPlayer.IsPlayerGrounded()))
 				{
 					Land();
 				}
@@ -399,13 +400,13 @@ public class WingFlightPlusGlideEditor : Editor
 					{
 						localPlayer.SetGravityStrength(flightGravity());
 					}
-					LHRot = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.LeftHand).rotation;
-					RHRot = LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.RightHand).rotation;
+					LHRot = localPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.LeftHand).rotation;
+					RHRot = localPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.RightHand).rotation;
 					if ((!isFlapping) && (isGliding ? true : handsOut) && handsOpposite && canGlide)
 					{
 						// Gliding, banking, and steering logic
 						isGliding = true;
-						newVelocity = setFinalVelocity ? finalVelocity : LocalPlayer.GetVelocity();
+						newVelocity = setFinalVelocity ? finalVelocity : localPlayer.GetVelocity();
 						wingDirection = Vector3.Normalize(Vector3.Slerp(RHRot * Vector3.forward, LHRot * Vector3.forward, 0.5f)); // The direction the player should go based on how they've angled their wings
 						// Hotfix: Always have some form of horizontal velocity while falling. In rare cases (more common with extremely small avatars) a player's velocity is perfectly straight up/down, which breaks gliding
 						if (newVelocity.y < 0.3f && newVelocity.x == 0 && newVelocity.z == 0)
@@ -458,7 +459,6 @@ public class WingFlightPlusGlideEditor : Editor
 						tmpFloat = windVector.magnitude * GetWingArea(windVector.normalized) * dt;
 						// Player's current speed in the same direction as the wind
 						tmpFloatB = Vector3.Dot(finalVelocity, windVector.normalized);
-						
 						if (tmpFloatB < windVector.magnitude && tmpFloat > 0.03f)
 						{
 							tmpV3 = -1 * finalVelocity * GetWingArea(-1 * finalVelocity) + windVector; // The force pushing on the player's wings from simply moving combined with the force pushing on the player's wings from the wind zone
@@ -511,7 +511,7 @@ public class WingFlightPlusGlideEditor : Editor
 							+ string.Concat("\nIsGliding: ", isGliding.ToString())
 							+ string.Concat("\nHandsOut: ", handsOut.ToString())
 							+ string.Concat("\nDownThrust: ", downThrust.ToString())
-							+ string.Concat("\nGrounded: ", LocalPlayer.IsPlayerGrounded().ToString())
+							+ string.Concat("\nGrounded: ", localPlayer.IsPlayerGrounded().ToString())
 							+ string.Concat("\nCannotFly: ", (cannotFlyTick > 0).ToString())
 							+ string.Concat("\nLeAngle: ", Vector3.Angle(LHRot * Vector3.left, RHRot * Vector3.right).ToString());
 					}
@@ -571,7 +571,7 @@ public class WingFlightPlusGlideEditor : Editor
 		// Technique pulled from https://github.com/Superbstingray/UdonPlayerPlatformHook
 		private bool IsMainMenuOpen()
 		{
-			int uiColliderCount = Physics.OverlapSphere(LocalPlayer.GetPosition(), 10f, 524288).Length;
+			int uiColliderCount = Physics.OverlapSphere(localPlayer.GetPosition(), 10f, 524288).Length;
 			return (uiColliderCount == 8 || uiColliderCount == 9 || uiColliderCount == 10);
 		}
 
