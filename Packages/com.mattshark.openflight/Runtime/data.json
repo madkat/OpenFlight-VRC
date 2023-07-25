@@ -1,6 +1,6 @@
 {
-  "JSON Version": "1.2.1",
-  "JSON Date": "2023-04-30",
+  "JSON Version": "1.4.0",
+  "JSON Date": "2023-07-24",
   "Bases": {
     "Kitavali": {
       "Original": {
@@ -620,6 +620,34 @@
         "Hash": ["-124394151v2"],
         "Weight": 1,
         "WingtipOffset": 15.75
+      }
+    },
+    "Mike'Vali": {
+      "Digitigrade": {
+        "Name": "Mike'Vali",
+        "Creator": "Mike Da Bird",
+        "Introducer": "Heather May",
+        "Hash": ["710186215v2"],
+        "Weight": 1,
+        "WingtipOffset": 5.5
+      },
+      "Plantigrade": {
+        "Name": "Mike'Vali",
+        "Creator": "Mike Da Bird",
+        "Introducer": "Heather May",
+        "Hash": ["499498998v2"],
+        "Weight": 1,
+        "WingtipOffset": 5.5
+      }
+    },
+    "Wyvernid": {
+      "Original": {
+        "Name": "Wyvernid V1",
+        "Creator": "Tosca / Morghus",
+        "Introducer": "Morghus",
+        "Hash": ["311343967v2"],
+        "Weight": 1,
+        "WingtipOffset": 7
       }
     }
   }
