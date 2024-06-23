@@ -88,6 +88,11 @@ namespace OpenFlightVRC
 		[ReadOnly]
 		public string flightMode = "Auto";
 
+		/// <summary>
+		/// The previous flight mode
+		/// </summary>
+		public string previousFlightMode = "Auto";
+
 		private VRCPlayerApi _localPlayer;
 
 		/// <summary>
@@ -95,6 +100,11 @@ namespace OpenFlightVRC
 		/// </summary>
 		[ReadOnly, ReadOnlyInspector]
 		public bool flightAllowed = false;
+
+		/// <summary>
+		/// If true, flight has been forced off by a script
+		/// </summary>
+		public bool flightForcedOff = false;
 
 		/// <summary>
 		/// If true, the system will ignore the VR check and allow flight even if the player is not in VR
@@ -136,6 +146,16 @@ namespace OpenFlightVRC
 			}
 
 			//apply flight mode
+			ApplyFlightMode();
+
+			Logger.Log("OpenFlight version " + OpenFlightVersion, this);
+		}
+
+		/// <summary>
+		/// Call helper method associated with current flightMode.
+		/// </summary>
+		private void ApplyFlightMode()
+		{
 			switch (flightMode)
 			{
 				case "On":
@@ -147,12 +167,12 @@ namespace OpenFlightVRC
 				case "Auto":
 					FlightAuto();
 					break;
+				case "Forced Off":
+					break;
 				default:
 					Logger.LogWarning("Invalid flight mode: " + flightMode, this);
 					break;
 			}
-
-			Logger.Log("OpenFlight version " + OpenFlightVersion, this);
 		}
 
 		/// <summary>
@@ -234,6 +254,30 @@ namespace OpenFlightVRC
 				wingedFlight.SetActive(false);
 				flightAllowed = false;
 			}
+		}
+
+		/// <summary>
+		/// Disable flight, by script, until re-enabled
+		/// </summary>
+		public void ForceDisableFlight()
+		{
+			if (!string.Equals(flightMode, "Forced Off"))
+			{
+				flightForcedOff = true;
+				previousFlightMode = flightMode;
+				FlightOff();
+				flightMode = "Forced Off";
+			}
+		}
+
+		/// <summary>
+		/// Remove forced disable status from flight
+		/// </summary>
+		public void ReEnableFlight()
+		{
+			flightForcedOff = false;
+			flightMode = previousFlightMode;
+			ApplyFlightMode();
 		}
 	}
 }
