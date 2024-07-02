@@ -236,6 +236,15 @@ namespace OpenFlightVRC
 		/// </summary>
 		private int cannotFlyTick = 0;
 
+		// Variables related to wind
+		private Vector3 wingPlaneNormalL;
+		private Vector3 wingPlaneNormalR;
+		[HideInInspector]
+		public bool windy = false;
+		
+		[HideInInspector]
+		public Vector3 windVector = new Vector3(0,0,0);
+
 		/// <summary>
 		/// Increased by one every tick the local players y velocity is negative
 		/// </summary>
@@ -565,6 +574,22 @@ namespace OpenFlightVRC
 
 					finalVelocity = Vector3.Slerp(newVelocity, targetVelocity, dt * newGlideControl);
 
+					if (windy)
+					{
+						// Handle wind
+						// How much speed should be added
+						float tmpFloat = windVector.magnitude * GetWingArea(windVector.normalized) * dt;
+						// Player's current speed in the same direction as the wind
+						float tmpFloatB = Vector3.Dot(finalVelocity, windVector.normalized);
+						if (tmpFloatB < windVector.magnitude && tmpFloat > 0.03f)
+						{
+							Vector3 tmpV3 = -1 * finalVelocity * GetWingArea(-1 * finalVelocity) + windVector; // The force pushing on the player's wings from simply moving combined with the force pushing on the player's wings from the wind zone
+							newVelocity = -1 * Vector3.Reflect(tmpV3, Vector3.Slerp(wingPlaneNormalL, wingPlaneNormalR, 0.5f)); // The force pushing on the wings based on its angle
+							newVelocity = Vector3.Slerp(windVector, newVelocity, 0.3f); // Reduce midair redirection amount to improve fun factor, maybe. Needs testing. (can adjust the float from 0 to 1) to increase how much your angle of movement is affected by your wing angle
+							finalVelocity = finalVelocity + (newVelocity.normalized * tmpFloat);
+						}
+					}
+
 					// Apply Air Friction
 					finalVelocity *= 1 - (airFriction * 0.011f);
 					setFinalVelocity = true;
@@ -576,6 +601,14 @@ namespace OpenFlightVRC
 					glideDelay = 0;
 				}
 			}
+		}
+
+		public float GetWingArea(Vector3 windDirection)
+		{
+			// Basically, how much wing area is the wind impacting?
+			float tmpFloatH = ((Mathf.Abs(Vector3.Angle(wingPlaneNormalL, windVector) - 90) / 100) + 0.1f) / 2;
+			tmpFloatH += ((Mathf.Abs(Vector3.Angle(wingPlaneNormalR, windVector) - 90) / 100) + 0.1f) / 2;
+			return tmpFloatH;
 		}
 
 		/// <summary>

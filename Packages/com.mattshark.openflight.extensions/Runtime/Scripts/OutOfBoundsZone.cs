@@ -15,32 +15,38 @@ namespace OpenFlightVRC.Extensions
 			init();
 		}
 
-		public void OnPlayerTriggerEnter()
+		public void OnPlayerTriggerEnter(VRC.SDKBase.VRCPlayerApi player)
 		{
-			if (notifyPlayer)
-			{
-				zoneNotifier.notifyPlayer("This area is out of bounds! Turn back!");
+			if (player.IsValid() && player.isLocal)
+        	{
+				if (notifyPlayer)
+				{
+					zoneNotifier.notifyPlayer("This area is out of bounds! Turn back!");
+				}
 			}
 		}
 
-		public void OnPlayerTriggerStay()
+		public void OnPlayerTriggerStay(VRC.SDKBase.VRCPlayerApi player)
 		{
-			//progressively push you back the deeper you go into the zone
-			Vector3 currentPlayerVelocity = localPlayer.GetVelocity();
-			//Convert the positive z vector of the zone to a world space vector
-			Vector3 worldSpaceDirection = transform.TransformDirection(getDirectionVector());
+			if (player.IsValid() && player.isLocal)
+        	{
+				//progressively push you back the deeper you go into the zone
+				Vector3 currentPlayerVelocity = localPlayer.GetVelocity();
+				//Convert the positive z vector of the zone to a world space vector
+				Vector3 worldSpaceDirection = transform.TransformDirection(getDirectionVector());
 
-			//calculate how deep into the zone the player is along the z axis
-			float distance = Mathf.Abs((transform.InverseTransformPoint(localPlayer.GetPosition()).z / colliderDepth) - 0.5f);
-			distance = Mathf.Clamp(distance, 0f, 1f);
+				//calculate how deep into the zone the player is along the z axis
+				float distance = Mathf.Abs((transform.InverseTransformPoint(localPlayer.GetPosition()).z / colliderDepth) - 0.5f);
+				distance = Mathf.Clamp(distance, 0f, 1f);
 
-			//calculate the strength based on the distance from the far side of the zone
-			float strength = Mathf.Lerp(0f, 20f, distance);
+				//calculate the strength based on the distance from the far side of the zone
+				float strength = Mathf.Lerp(0f, 20f, distance);
 
-			//push the player back based on the direction of the zone (positive z relative to the zone)
-			Vector3 ModifiedVelocity = currentPlayerVelocity + (worldSpaceDirection * strength);
+				//push the player back based on the direction of the zone (positive z relative to the zone)
+				Vector3 ModifiedVelocity = currentPlayerVelocity + (worldSpaceDirection * strength);
 
-			localPlayer.SetVelocity(ModifiedVelocity);
+				localPlayer.SetVelocity(ModifiedVelocity);
+			}
 		}
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR

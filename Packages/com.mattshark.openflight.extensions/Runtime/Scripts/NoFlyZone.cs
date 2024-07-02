@@ -18,23 +18,29 @@ namespace OpenFlightVRC.Extensions
 			openFlight = GameObject.Find("OpenFlight").GetComponent<OpenFlight>();
 		}
 
-		public void OnPlayerTriggerEnter()
+		public void OnPlayerTriggerEnter(VRC.SDKBase.VRCPlayerApi player)
 		{
-			//turns off flight when the player enters the no fly zone
-			openFlight.ForceDisableFlight();
-			if (notifyPlayer)
-			{
-				zoneNotifier.notifyPlayer("Flight Disabled by World");
+			if (player.IsValid() && player.isLocal)
+        	{
+				//turns off flight when the player enters the no fly zone
+				openFlight.ForceDisableFlight();
+				if (notifyPlayer)
+				{
+					zoneNotifier.notifyPlayer("Flight Disabled by World");
+				}
 			}
 		}
 
-		public void OnPlayerTriggerExit()
+		public void OnPlayerTriggerExit(VRC.SDKBase.VRCPlayerApi player)
 		{
-			//turns flight back on when the player leaves the no fly zone
-			openFlight.ReEnableFlight();
-			if (notifyPlayer)
-			{
-				zoneNotifier.notifyPlayer("Flight Returned to Previous State");
+			if (player.IsValid() && player.isLocal)
+        	{
+				//turns flight back on when the player leaves the no fly zone
+				openFlight.ReEnableFlight();
+				if (notifyPlayer)
+				{
+					zoneNotifier.notifyPlayer("Flight Returned to Previous State");
+				}
 			}
 		}
 

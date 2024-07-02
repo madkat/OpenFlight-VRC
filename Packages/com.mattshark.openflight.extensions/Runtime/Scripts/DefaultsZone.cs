@@ -21,13 +21,16 @@ namespace OpenFlightVRC.Extensions
 			} //an else block here could return an error. "Assign the OpenFlight value in the inspector"
 		}
 
-		public void OnPlayerTriggerEnter()
+		public void OnPlayerTriggerEnter(VRC.SDKBase.VRCPlayerApi player)
 		{
-			//turns off flight when the player enters the no fly zone
-			wingFlightPlusGlide.RestoreDefaults();
-			if (notifyPlayer)
-			{
-				zoneNotifier.notifyPlayer("Flight Settings Reset by World");
+			if (player.IsValid() && player.isLocal)
+        	{
+				//turns off flight when the player enters the no fly zone
+				wingFlightPlusGlide.RestoreDefaults();
+				if (notifyPlayer)
+				{
+					zoneNotifier.notifyPlayer("Flight Settings Reset by World");
+				}
 			}
 		}
 

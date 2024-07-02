@@ -9,15 +9,15 @@ using VRC.SDKBase;
 
 namespace OpenFlightVRC
 {
-	using UnityEditor;
-	//This chunk of code allows the OpenFlight version number to be set automatically from the package.json file
-	//its done using this method for dumb unity reasons but it works so whatever
+    using UnityEditor;
+    //This chunk of code allows the OpenFlight version number to be set automatically from the package.json file
+    //its done using this method for dumb unity reasons but it works so whatever
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
-	using UnityEditor.Callbacks;
+    using UnityEditor.Callbacks;
 
-	using VRC.SDKBase.Editor.BuildPipeline;
+    using VRC.SDKBase.Editor.BuildPipeline;
 
-	public class OpenFlightScenePostProcessor
+    public class OpenFlightScenePostProcessor
 	{
 		[PostProcessScene]
 		public static void OnPostProcessScene()
@@ -41,11 +41,11 @@ namespace OpenFlightVRC
 
 	public class OpenFlightChecker : VRC.SDKBase.Editor.BuildPipeline.IVRCSDKBuildRequestedCallback
 	{
-		public int callbackOrder => 0;
+        public int callbackOrder => 0;
 
-		public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
-		{
-			//check to make sure the world scale of openflight is 1
+        public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
+        {
+            //check to make sure the world scale of openflight is 1
 			OpenFlight[] openFlightScripts = Object.FindObjectsOfType<OpenFlight>();
 
 			foreach (OpenFlight openFlightScript in openFlightScripts)
@@ -61,15 +61,16 @@ namespace OpenFlightVRC
 			}
 
 			return true;
-		}
+        }
 	}
 #endif
 
-	public enum FlightMode
+public enum FlightMode
 	{
 		Off,
 		Auto,
-		On
+		On,
+		ForcedOff
 	}
 
 	[UdonBehaviourSyncMode(BehaviourSyncMode.None)]
@@ -116,6 +117,8 @@ namespace OpenFlightVRC
 					case FlightMode.On:
 						flightModeString = "On";
 						break;
+					case FlightMode.ForcedOff:
+						flightModeString = "Forced Off";
 					default:
 						flightModeString = "Unknown";
 						break;
@@ -132,7 +135,7 @@ namespace OpenFlightVRC
 		/// <summary>
 		/// The previous flight mode
 		/// </summary>
-		public string previousFlightMode = "Auto";
+		public FlightMode previousFlightMode = FlightMode.Auto;
 
 		private VRCPlayerApi _localPlayer;
 
@@ -204,7 +207,7 @@ namespace OpenFlightVRC
 			{
 				Logger.LogWarning("VR check is being ignored! This should not be enabled in a production build!", this);
 			}
-
+			
 			//ensure the user is valid
 			if (_localPlayer == null)
 			{
@@ -249,7 +252,7 @@ namespace OpenFlightVRC
 				case FlightMode.Auto:
 					FlightAuto();
 					break;
-				case "Forced Off":
+				case FlightMode.ForcedOff:
 					break;
 				default:
 					Logger.LogWarning("Invalid flight mode: " + flightModeString, this);
@@ -343,12 +346,12 @@ namespace OpenFlightVRC
 		/// </summary>
 		public void ForceDisableFlight()
 		{
-			if (!string.Equals(flightMode, "Forced Off"))
+			if (flightMode != FlightMode.ForcedOff)
 			{
 				flightForcedOff = true;
 				previousFlightMode = flightMode;
 				FlightOff();
-				flightMode = "Forced Off";
+				flightMode = FlightMode.ForcedOff;
 			}
 		}
 
