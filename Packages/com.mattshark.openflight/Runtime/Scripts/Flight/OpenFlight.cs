@@ -119,6 +119,7 @@ public enum FlightMode
 						break;
 					case FlightMode.ForcedOff:
 						flightModeString = "Forced Off";
+						break;
 					default:
 						flightModeString = "Unknown";
 						break;
